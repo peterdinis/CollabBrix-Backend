@@ -6,11 +6,13 @@ import { AppResendModule } from 'src/resend/resend.module';
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [PrismaModule, AppResendModule, 
+  imports: [
+    PrismaModule,
+    AppResendModule,
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ".env"
-    })
+      envFilePath: '.env',
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],
