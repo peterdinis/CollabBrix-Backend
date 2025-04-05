@@ -1,14 +1,99 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
+}
+
+// User table to manage app users
+model User {
+  id                    Int                     @id @default(autoincrement())
+  username              String                  @unique
+  email                 String                  @unique
+  password              String
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  workspaces            UserWorkspace[]         // Relation to join table
+  ownedWorkspaces       Workspace[]             @relation("OwnedWorkspaces")
+  collaborations        DocumentCollaborators[] // Relation to join table
+  notes                 Note[]
+  teams                 TeamUser[]              // Relation to join table
+}
+
+// Team table to manage teams
+model Team {
+  id          Int         @id @default(autoincrement())
+  name        String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  users       TeamUser[]  // Relation to join table
+}
+
+// Team-User join table
+model TeamUser {
+  teamId    Int
+  userId    Int
+  team      Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([teamId, userId])
+}
+
+// Workspace table to manage workspaces
+model Workspace {
+  id            Int             @id @default(autoincrement())
+  name          String
+  isPublic      Boolean         @default(false)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  ownerId       Int
+  owner         User            @relation("OwnedWorkspaces", fields: [ownerId], references: [id])
+  documents     Document[]
+  users         UserWorkspace[] // Relation to join table
+}
+
+// Document table to store document details
+model Document {
+  id            Int                     @id @default(autoincrement())
+  title         String
+  content       String
+  isPublic      Boolean                 @default(false)
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+  workspaceId   Int
+  workspace     Workspace               @relation(fields: [workspaceId], references: [id])
+  collaborators DocumentCollaborators[] // Relation to join table
+}
+
+// Note table to store user notes
+model Note {
+  id        Int      @id @default(autoincrement())
+  title     String   // Title of the note
+  content   String   // Content of the note
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id]) // Relation to User
+}
+
+// User-Workspace many-to-many relation (join table)
+model UserWorkspace {
+  userId      Int
+  workspaceId Int
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@id([userId, workspaceId])
+}
+
+// Many-to-many relation between documents and users for collaboration (join table)
+model DocumentCollaborators {
+  documentId   Int
+  userId       Int
+  document     Document @relation(fields: [documentId], references: [id])
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@id([documentId, userId])
 }
