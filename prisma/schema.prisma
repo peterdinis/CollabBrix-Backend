@@ -9,16 +9,17 @@ datasource db {
 
 // User table to manage app users
 model User {
-  id          Int         @id @default(autoincrement())
-  username    String      @unique
-  email       String      @unique
-  password    String
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  teams       Team[]      @relation("UserTeams")
-  workspaces  Workspace[] @relation("UserWorkspaces")  // Reverse relation to UserWorkspace
-  notes       Note[]      // Added relationship to Notes
-  documents   Document[]  @relation("DocumentCollaborators")
+  id                    Int                     @id @default(autoincrement())
+  username              String                  @unique
+  email                 String                  @unique
+  password              String
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  workspaces            UserWorkspace[]         // Relation to join table
+  ownedWorkspaces       Workspace[]             @relation("OwnedWorkspaces")
+  collaborations        DocumentCollaborators[] // Relation to join table
+  notes                 Note[]
+  teams                 TeamUser[]              // Relation to join table
 }
 
 // Team table to manage teams
@@ -27,33 +28,43 @@ model Team {
   name        String
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
-  users       User[]      @relation("UserTeams")
+  users       TeamUser[]  // Relation to join table
+}
+
+// Team-User join table
+model TeamUser {
+  teamId    Int
+  userId    Int
+  team      Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([teamId, userId])
 }
 
 // Workspace table to manage workspaces
 model Workspace {
-  id          Int         @id @default(autoincrement())
-  name        String
-  isPublic    Boolean     @default(false)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  ownerId     Int
-  owner       User        @relation("OwnedWorkspaces", fields: [ownerId], references: [id]) // Specify the relation name here
-  documents   Document[]  // Each workspace can have many documents
-  users       User[]      @relation("UserWorkspaces")  // Reverse relation to UserWorkspace
+  id            Int             @id @default(autoincrement())
+  name          String
+  isPublic      Boolean         @default(false)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  ownerId       Int
+  owner         User            @relation("OwnedWorkspaces", fields: [ownerId], references: [id])
+  documents     Document[]
+  users         UserWorkspace[] // Relation to join table
 }
 
 // Document table to store document details
 model Document {
-  id          Int         @id @default(autoincrement())
-  title       String
-  content     String
-  isPublic    Boolean     @default(false)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  workspaceId Int
-  workspace   Workspace   @relation(fields: [workspaceId], references: [id])
-  collaborators User[]     @relation("DocumentCollaborators")
+  id            Int                     @id @default(autoincrement())
+  title         String
+  content       String
+  isPublic      Boolean                 @default(false)
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+  workspaceId   Int
+  workspace     Workspace               @relation(fields: [workspaceId], references: [id])
+  collaborators DocumentCollaborators[] // Relation to join table
 }
 
 // Note table to store user notes
@@ -67,22 +78,22 @@ model Note {
   user      User     @relation(fields: [userId], references: [id]) // Relation to User
 }
 
-// User-Workspace many-to-many relation
+// User-Workspace many-to-many relation (join table)
 model UserWorkspace {
   userId      Int
   workspaceId Int
-  user        User      @relation(fields: [userId], references: [id])
-  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@id([userId, workspaceId])
 }
 
-// Many-to-many relation between documents and users for collaboration
+// Many-to-many relation between documents and users for collaboration (join table)
 model DocumentCollaborators {
-  documentId  Int
-  userId      Int
-  document    Document @relation(fields: [documentId], references: [id])
-  user        User     @relation(fields: [userId], references: [id])
+  documentId   Int
+  userId       Int
+  document     Document @relation(fields: [documentId], references: [id])
+  user         User     @relation(fields: [userId], references: [id])
 
   @@id([documentId, userId])
 }
