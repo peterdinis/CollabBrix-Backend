@@ -1,10 +1,10 @@
-import { Injectable } from "@nestjs/common";
-import { ResendService } from "nestjs-resend";
+import { Injectable } from '@nestjs/common';
+import { ResendService } from 'nestjs-resend';
 
 @Injectable()
 export class AppResendService {
-    constructor(private readonly resendService: ResendService) {}
+  constructor(private readonly resendService: ResendService) {}
 
-    // TODO
-    async sendEmail() {}
+  // TODO
+  async sendEmail() {}
 }
