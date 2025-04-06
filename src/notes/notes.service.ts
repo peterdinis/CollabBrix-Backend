@@ -1,7 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { parseISO, isWithinInterval } from 'date-fns';
+import { parseISO, isWithinInterval, isValid } from 'date-fns';
 import { CreateNoteDto } from './dto/create-note.dto';
+import { UpdateNoteDto } from './dto/update-note.dto';
 
 @Injectable()
 export class NotesService {
@@ -69,6 +70,10 @@ export class NotesService {
   }
 
   async createNewNote(userId: number, dto: CreateNoteDto) {
+    if (!dto.title || !dto.content) {
+      throw new BadRequestException("Title and content are required.");
+    }
+
     return this.prisma.note.create({
       data: {
         ...dto,
@@ -79,6 +84,10 @@ export class NotesService {
 
   async updateNote(noteId: number, userId: number, dto: UpdateNoteDto) {
     const note = await this.getUserNoteDetail(noteId, userId);
+
+    if (!dto.title && !dto.content) {
+      throw new BadRequestException("At least one field (title or content) is required to update.");
+    }
 
     return this.prisma.note.update({
       where: { id: note.id },
@@ -95,16 +104,21 @@ export class NotesService {
   }
 
   async deleteAllUserNotes(userId: number) {
+    const count = await this.prisma.note.count({ where: { userId } });
+    if (count === 0) {
+      throw new NotFoundException("User has no notes to delete.");
+    }
+
     return this.prisma.note.deleteMany({
       where: { userId },
     });
   }
 
-  async sortingMyUserNotes(
-    userId: number,
-    sortBy: 'title' | 'createdAt' = 'createdAt',
-    order: 'asc' | 'desc' = 'desc',
-  ) {
+  async sortingMyUserNotes(userId: number, sortBy: "title" | "createdAt" = "createdAt", order: "asc" | "desc" = "desc") {
+    if (!["title", "createdAt"].includes(sortBy) || !["asc", "desc"].includes(order)) {
+      throw new BadRequestException("Invalid sorting parameters.");
+    }
+
     return this.prisma.note.findMany({
       where: { userId },
       orderBy: {
@@ -117,9 +131,17 @@ export class NotesService {
     const fromDate = parseISO(from);
     const toDate = parseISO(to);
 
+    if (!isValid(fromDate) || !isValid(toDate)) {
+      throw new BadRequestException("Invalid date format. Use ISO strings.");
+    }
+
+    if (fromDate > toDate) {
+      throw new BadRequestException("'from' date cannot be after 'to' date.");
+    }
+
     const allNotes = await this.prisma.note.findMany({
       where: { userId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
     return allNotes.filter((note) =>
