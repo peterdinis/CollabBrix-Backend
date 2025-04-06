@@ -1,16 +1,31 @@
-import { Body, Controller, Post } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Post,
+  UseGuards,
+  Get,
+  Request,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBody,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { RegisterDto } from 'src/users/dto/register-dto';
 import { UsersService } from 'src/users/users.service';
-
-class AuthDto {
-  email: string;
-  password: string;
-}
+import { AuthService } from './auth.service';
+import { JwtAuthGuard } from './guards/auth.guard';
+import { LoginDto } from './dto/login-dto';
 
 class AuthResponse {
   access_token: string;
+}
+
+class UserProfileResponse {
+  userId: string;
+  email: string;
 }
 
 @ApiTags('Auth')
@@ -23,7 +38,7 @@ export class AuthController {
 
   @Post('register')
   @ApiOperation({ summary: 'Register a new user' })
-  @ApiBody({ type: AuthDto })
+  @ApiBody({ type: RegisterDto })
   @ApiResponse({
     status: 201,
     description: 'User registered successfully',
@@ -35,15 +50,32 @@ export class AuthController {
 
   @Post('login')
   @ApiOperation({ summary: 'Login a user' })
-  @ApiBody({ type: AuthDto })
+  @ApiBody({ type: LoginDto })
   @ApiResponse({
     status: 200,
     description: 'Successful login',
     type: AuthResponse,
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async login(@Body() body: AuthDto) {
+  async login(@Body() body: LoginDto) {
     const user = await this.authService.validateUser(body.email, body.password);
     return this.authService.login(user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('profile')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get the authenticated user profile' })
+  @ApiResponse({
+    status: 200,
+    description: 'Authenticated user data',
+    type: UserProfileResponse,
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async profile(@Request() req) {
+    return {
+      userId: req.user.userId,
+      email: req.user.email,
+    };
   }
 }
