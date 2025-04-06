@@ -5,6 +5,7 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 import { AppResendModule } from 'src/resend/resend.module';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from 'src/auth/auth.module';
+import { NotesModule } from 'src/notes/notes.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { AuthModule } from 'src/auth/auth.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    NotesModule,
     AuthModule,
   ],
   controllers: [AppController],
