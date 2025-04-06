@@ -82,7 +82,10 @@ describe('AuthController', () => {
 
       const result = await authController.login(dto);
 
-      expect(authService.validateUser).toHaveBeenCalledWith(dto.email, dto.password);
+      expect(authService.validateUser).toHaveBeenCalledWith(
+        dto.email,
+        dto.password,
+      );
       expect(authService.login).toHaveBeenCalledWith(fakeUser);
       expect(result).toEqual(token);
     });

@@ -29,6 +29,7 @@
     "@nestjs/swagger": "^11.1.1",
     "@prisma/client": "^6.5.0",
     "bcrypt": "^5.1.1",
+    "date-fns": "^4.1.0",
     "nestjs-resend": "^1.0.1",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
