@@ -46,7 +46,7 @@ describe('AuthService', () => {
       const hashedPassword = await bcrypt.hash(password, 10);
 
       const user = {
-        id: faker.string.uuid(),
+        id: Math.random(),
         email,
         password: hashedPassword,
         name: faker.person.fullName(),
@@ -76,7 +76,7 @@ describe('AuthService', () => {
     it('should throw UnauthorizedException if password is incorrect', async () => {
       const email = faker.internet.email();
       const user = {
-        id: faker.string.uuid(),
+        id: Math.random(),
         email,
         password: faker.internet.password(),
       };
@@ -93,8 +93,10 @@ describe('AuthService', () => {
   describe('login', () => {
     it('should return a signed JWT token', async () => {
       const user = {
-        id: faker.string.uuid(),
+        id: Math.random(),
         email: faker.internet.email(),
+        password: faker.internet.password(),
+        username: faker.internet.username()
       };
 
       const fakeToken = faker.string.uuid();
