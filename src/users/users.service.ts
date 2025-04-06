@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { RegisterDto } from './dto/register-dto';
 
 @Injectable()
 export class UsersService {
@@ -12,11 +13,25 @@ export class UsersService {
         email
       }
     })
-    
-    //return this.prisma.user.findUnique({ where: { email } });
+
+    if(!user) {
+      throw new NotFoundException("User not found");
+    }
+
+    return user;
   }
 
-  async create(data: { email: string; password: string }) {
-    return this.prisma.user.create({ data });
+  async create(registerData: RegisterDto) {
+    const newUser = await this.prismaService.user.create({
+      data: {
+        ...registerData
+      }
+    })
+
+    if(!newUser) {
+      throw new BadRequestException("Failed to create new user")
+    }
+
+    return newUser
   }
 }
