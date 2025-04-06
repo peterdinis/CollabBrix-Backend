@@ -1,38 +1,71 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { PrismaService } from "src/prisma/prisma.service";
-import { CreateNoteDto } from "./dto/create-note.dto";
-import { UpdateNoteDto } from "./dto/update-note.dto";
-import { parseISO, isWithinInterval } from "date-fns";
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { parseISO, isWithinInterval } from 'date-fns';
+import { CreateNoteDto } from './dto/create-note.dto';
 
 @Injectable()
 export class NotesService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getAllNotes() {
-    return this.prisma.note.findMany({
-      orderBy: { createdAt: "desc" },
+    const allNotes = await this.prisma.note.findMany({
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
+
+    if (!allNotes) {
+      throw new NotFoundException('No notes found');
+    }
+
+    return allNotes;
   }
 
   async getOneNote(noteId: number) {
-    const note = await this.prisma.note.findUnique({ where: { id: noteId } });
-    if (!note) throw new NotFoundException("Note not found");
-    return note;
+    const oneNote = await this.prisma.note.findUnique({
+      where: {
+        id: noteId,
+      },
+    });
+
+    if (!oneNote) {
+      throw new NotFoundException('Note not found');
+    }
+
+    return oneNote;
   }
 
   async getAllUsersNotes(userId: number) {
-    return this.prisma.note.findMany({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
+    const allMyNotes = await this.prisma.note.findMany({
+      where: {
+        userId,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
+
+    if (!allMyNotes) {
+      throw new NotFoundException('User does not create any notes');
+    }
+
+    return allMyNotes;
   }
 
   async getUserNoteDetail(noteId: number, userId: number) {
-    const note = await this.prisma.note.findFirst({
-      where: { id: noteId, userId },
-    });
-    if (!note) throw new NotFoundException("Note not found for this user");
-    return note;
+
+    const oneUserNote = await this.prisma.note.findFirst({
+        where: {
+            id: noteId,
+            userId
+        }
+    })
+
+    if(!oneUserNote) {
+        throw new NotFoundException("This note does not exits")
+    }
+
+    return oneUserNote
   }
 
   async createNewNote(userId: number, dto: CreateNoteDto) {
@@ -67,7 +100,11 @@ export class NotesService {
     });
   }
 
-  async sortingMyUserNotes(userId: number, sortBy: "title" | "createdAt" = "createdAt", order: "asc" | "desc" = "desc") {
+  async sortingMyUserNotes(
+    userId: number,
+    sortBy: 'title' | 'createdAt' = 'createdAt',
+    order: 'asc' | 'desc' = 'desc',
+  ) {
     return this.prisma.note.findMany({
       where: { userId },
       orderBy: {
@@ -82,11 +119,11 @@ export class NotesService {
 
     const allNotes = await this.prisma.note.findMany({
       where: { userId },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
     });
 
-    return allNotes.filter(note =>
-      isWithinInterval(note.createdAt, { start: fromDate, end: toDate })
+    return allNotes.filter((note) =>
+      isWithinInterval(note.createdAt, { start: fromDate, end: toDate }),
     );
   }
 }

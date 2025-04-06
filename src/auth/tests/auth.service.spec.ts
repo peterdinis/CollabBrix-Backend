@@ -69,7 +69,10 @@ describe('AuthService', () => {
       mockUsersService.findByEmail.mockResolvedValue(null);
 
       await expect(
-        authService.validateUser(faker.internet.email(), faker.internet.password()),
+        authService.validateUser(
+          faker.internet.email(),
+          faker.internet.password(),
+        ),
       ).rejects.toThrow(UnauthorizedException);
     });
 
@@ -96,7 +99,7 @@ describe('AuthService', () => {
         id: Math.random(),
         email: faker.internet.email(),
         password: faker.internet.password(),
-        username: faker.internet.username()
+        username: faker.internet.username(),
       };
 
       const fakeToken = faker.string.uuid();
