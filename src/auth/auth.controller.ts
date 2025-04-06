@@ -57,7 +57,7 @@ export class AuthController {
     type: AuthResponse,
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async login(@Body() body: LoginDto) {
+  async login(@Body() body: Partial<LoginDto>) {
     const user = await this.authService.validateUser(body.email, body.password);
     return this.authService.login(user);
   }
