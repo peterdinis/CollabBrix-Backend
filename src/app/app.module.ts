@@ -14,7 +14,7 @@ import { AuthModule } from 'src/auth/auth.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
-    AuthModule
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

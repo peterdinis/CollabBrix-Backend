@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RegisterDto } from './dto/register-dto';
 
@@ -7,15 +11,14 @@ export class UsersService {
   constructor(private readonly prismaService: PrismaService) {}
 
   async findByEmail(email: string) {
-    
     const user = await this.prismaService.user.findFirst({
       where: {
-        email
-      }
-    })
+        email,
+      },
+    });
 
-    if(!user) {
-      throw new NotFoundException("User not found");
+    if (!user) {
+      throw new NotFoundException('User not found');
     }
 
     return user;
@@ -24,14 +27,14 @@ export class UsersService {
   async create(registerData: RegisterDto) {
     const newUser = await this.prismaService.user.create({
       data: {
-        ...registerData
-      }
-    })
+        ...registerData,
+      },
+    });
 
-    if(!newUser) {
-      throw new BadRequestException("Failed to create new user")
+    if (!newUser) {
+      throw new BadRequestException('Failed to create new user');
     }
 
-    return newUser
+    return newUser;
   }
 }
