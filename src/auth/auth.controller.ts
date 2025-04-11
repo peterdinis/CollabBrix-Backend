@@ -5,6 +5,8 @@ import {
   UseGuards,
   Get,
   Request,
+  Query,
+  BadRequestException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -77,5 +79,41 @@ export class AuthController {
       userId: req.user.userId,
       email: req.user.email,
     };
+  }
+
+  @Get('users')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get users with pagination and search' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of users with pagination and search',
+    type: [UserProfileResponse], 
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async getUsers(
+    @Query('page') page: number = 1,
+    @Query('pageSize') pageSize: number = 10,
+    @Query('search') search: string = '',
+  ) {
+    // Validating search query
+    if (search.trim() === '') {
+      throw new BadRequestException('Search query cannot be empty');
+    }
+    return this.usersService.findAllUsers(page, pageSize, search);
+  }
+  
+  @Get('search')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Search users by email or username' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of users matching search criteria',
+    type: [UserProfileResponse],
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async searchUsers(@Query('search') search: string) {
+    return this.usersService.searchUsers(search);
   }
 }
