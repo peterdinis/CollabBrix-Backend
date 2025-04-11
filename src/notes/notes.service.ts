@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { parseISO, isWithinInterval, isValid } from 'date-fns';
@@ -66,7 +67,7 @@ export class NotesService {
     });
 
     if (!oneUserNote) {
-      throw new NotFoundException('This note does not exits');
+      throw new NotFoundException('This note does not exist');
     }
 
     return oneUserNote;
@@ -159,5 +160,63 @@ export class NotesService {
     return allNotes.filter((note) =>
       isWithinInterval(note.createdAt, { start: fromDate, end: toDate }),
     );
+  }
+
+  // Pagination method for logged-in user
+  async getPaginatedNotesForLoggedInUser(
+    page: number = 1,
+    pageSize: number = 10,
+    userId: number,
+  ) {
+    if (page < 1 || pageSize < 1) {
+      throw new BadRequestException('Page and pageSize must be greater than 0');
+    }
+
+    const skip = (page - 1) * pageSize;
+
+    const paginatedNotes = await this.prisma.note.findMany({
+      where: { userId },
+      skip,
+      take: pageSize,
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const totalNotes = await this.prisma.note.count({
+      where: { userId },
+    });
+
+    const totalPages = Math.ceil(totalNotes / pageSize);
+
+    return {
+      data: paginatedNotes,
+      totalNotes,
+      totalPages,
+      currentPage: page,
+      pageSize,
+    };
+  }
+
+  // Search method for logged-in user
+  async searchNotesForLoggedInUser(search: string, userId: number) {
+    if (!search.trim()) {
+      throw new BadRequestException('Search query cannot be empty');
+    }
+
+    const notes = await this.prisma.note.findMany({
+      where: {
+        userId,
+        OR: [
+          { title: { contains: search} },
+          { content: { contains: search} },
+        ],
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (notes.length === 0) {
+      throw new NotFoundException('No notes found matching the search query');
+    }
+
+    return notes;
   }
 }
