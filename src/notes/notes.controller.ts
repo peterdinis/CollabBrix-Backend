@@ -123,8 +123,7 @@ export class NotesController {
   ) {
     return this.notesService.sortUserNotesByDateRange(userId, from, to);
   }
-
-  // New Endpoint: Pagination for logged-in user
+  
   @Get('user/:userId/paginated')
   @ApiOperation({ summary: 'Get paginated notes for a user' })
   @ApiParam({ name: 'userId', type: Number })
@@ -138,7 +137,6 @@ export class NotesController {
     return this.notesService.getPaginatedNotesForLoggedInUser(userId, page, pageSize);
   }
 
-  // New Endpoint: Search notes for logged-in user
   @Get('user/:userId/search')
   @ApiOperation({ summary: 'Search notes for a user' })
   @ApiParam({ name: 'userId', type: Number })
