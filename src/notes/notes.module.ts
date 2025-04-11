@@ -6,6 +6,6 @@ import { NotesController } from './notes.controller';
 @Module({
   imports: [PrismaModule],
   providers: [NotesService],
-  controllers: [NotesController]
+  controllers: [NotesController],
 })
 export class NotesModule {}
