@@ -123,4 +123,30 @@ export class NotesController {
   ) {
     return this.notesService.sortUserNotesByDateRange(userId, from, to);
   }
+
+  // New Endpoint: Pagination for logged-in user
+  @Get('user/:userId/paginated')
+  @ApiOperation({ summary: 'Get paginated notes for a user' })
+  @ApiParam({ name: 'userId', type: Number })
+  @ApiQuery({ name: 'page', type: Number, required: false, example: 1 })
+  @ApiQuery({ name: 'pageSize', type: Number, required: false, example: 10 })
+  getPaginatedNotes(
+    @Param('userId', ParseIntPipe) userId: number,
+    @Query('page') page: number = 1,
+    @Query('pageSize') pageSize: number = 10,
+  ) {
+    return this.notesService.getPaginatedNotesForLoggedInUser(userId, page, pageSize);
+  }
+
+  // New Endpoint: Search notes for logged-in user
+  @Get('user/:userId/search')
+  @ApiOperation({ summary: 'Search notes for a user' })
+  @ApiParam({ name: 'userId', type: Number })
+  @ApiQuery({ name: 'search', type: String, required: true, example: 'meeting' })
+  searchNotes(
+    @Param('userId', ParseIntPipe) userId: number,
+    @Query('search') search: string,
+  ) {
+    return this.notesService.searchNotesForLoggedInUser(String(userId),Number(search));
+  }
 }
